@@ -1,12 +1,9 @@
+# Environment files with secrets
+**/.env
+
 # TLS secrets
 containers/reverse-proxy/nginx/tls/*
-
 containers/reverse-proxy/nginx/certbot/
 
-# Environment variable files
-containers/apps/vaultwarden/.env
-containers/monitoring/grafana/.env
-containers/monitoring/node-exporter/.env
-containers/monitoring/prometheus/.env
-containers/reverse-proxy/nginx/.env
-env/example.env
+# Persistent data
+/srv/
