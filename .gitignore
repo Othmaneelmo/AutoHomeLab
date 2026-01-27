@@ -1,2 +1,4 @@
 # TLS secrets
 containers/reverse-proxy/nginx/tls/*
+
+containers/reverse-proxy/nginx/certbot/
