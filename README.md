@@ -166,25 +166,51 @@ Access Grafana at `https://grafana.example.com` and import:
 Check scrape status at `https://prometheus.example.com/targets`
 
 ---
-
 ## Backup Strategy
 
-**Critical data locations:**
-- `/srv/grafana/data` — Grafana dashboards and config
-- `/srv/prometheus/data` — Metrics time-series data
+### Automated Backups
+
+**What's backed up:**
+- `/srv/grafana/data` — Grafana dashboards and configuration
+- `/srv/prometheus/data` — Metrics time-series database
 - `/srv/vaultwarden/data` — Password vault database
 
-**Recommended approach:**
-```bash
-# Manual backup
-sudo tar -czf homelab-backup-$(date +%Y%m%d).tar.gz /srv
+**Schedule:**
+- Runs daily at 2:00 AM via systemd timer
+- Retention: 7 days (automatic rotation)
+- Location: `/backups/homelab/`
 
-# Automated backup (add to crontab)
-0 2 * * * /usr/local/bin/backup-homelab.sh
+**Verification:**
+- Integrity check after each backup
+- Manual testing recommended monthly
+
+### Check Backup Status
+```bash
+# View backup status
+~/homelab/scripts/backup/check-backup-status.sh
+
+# View backup logs
+sudo journalctl -u homelab-backup.service
+
+# List all backups
+ls -lh /backups/homelab/
 ```
 
----
+### Manual Backup
+```bash
+# Run backup immediately
+sudo systemctl start homelab-backup.service
 
+# Monitor progress
+sudo journalctl -u homelab-backup.service -f
+```
+
+### Restore Procedures
+
+See [RESTORE.md](scripts/backup/RESTORE.md) for detailed restore procedures including:
+- Full system restore
+- Selective service restore
+- Disaster recovery guide
 ## Maintenance
 
 ### Update containers
