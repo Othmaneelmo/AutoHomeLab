@@ -1,3 +1,9 @@
+cd ~/homelab
+nano .gitignore
+```
+
+**Add backup-related exclusions:**
+```
 # Environment files with secrets
 **/.env
 
@@ -7,3 +13,10 @@ containers/reverse-proxy/nginx/certbot/
 
 # Persistent data
 /srv/
+
+# Backups
+/backups/
+
+# Logs
+/var/log/homelab-backup.log
+scripts/backup/test-log.txt
