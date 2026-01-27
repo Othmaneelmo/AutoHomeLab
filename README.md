@@ -16,16 +16,15 @@ This homelab uses **Podman** (rootless, daemonless) for container orchestration 
 ## Current Services
 
 ### Applications
-- **Vaultwarden** (`vault.example.com`) — Self-hosted password manager
-  - Bitwarden-compatible API
-  - WebAuthn/U2F support
-  - Admin panel for user management
-
+**Vaultwarden** (`vault.example.com`) — Self-hosted password manager
+- Bitwarden-compatible API
+- WebAuthn/U2F support
+- Admin panel for user management
 ### Monitoring
+- **Uptime Kuma** (`status.example.com`) — Service health monitoring and status page
 - **Grafana** (`grafana.example.com`) — Metrics visualization and dashboards
 - **Prometheus** (`prometheus.example.com`) — Time-series metrics database
 - **Node Exporter** — Host system metrics collector
-
 ### Infrastructure
 - **Nginx** — Reverse proxy with automatic SSL/TLS via Let's Encrypt
 - **Certbot** — Automated certificate issuance and renewal
@@ -41,6 +40,9 @@ homelab/
 │   │       ├── docker-compose.yml
 │   │       └── .env.example
 │   ├── monitoring/
+│   │   ├── uptime-kuma/          # Service health monitoring
+│   │   │   ├── docker-compose.yml
+│   │   │   └── .env.example
 │   │   ├── grafana/              # Visualization
 │   │   ├── prometheus/           # Metrics database
 │   │   └── node-exporter/        # System metrics
@@ -49,10 +51,13 @@ homelab/
 │           ├── docker-compose.yml
 │           ├── nginx.conf
 │           └── .env.example
+├── scripts/
+│   └── backup/                   # Automated backups
+│       ├── backup-homelab.sh
+│       ├── check-backup-status.sh
+│       └── RESTORE.md
 ├── env/
 │   └── example.env               # Global configuration template
-├── scripts/
-│   └── bootstrap/                # Host preparation scripts
 ├── setup-guide/
 │   └── homelab-setup-guide.md    # Step-by-step instructions
 ├── .gitignore
@@ -154,6 +159,7 @@ homelab/
 
 ## Monitoring
 
+
 ### Grafana Dashboards
 
 Access Grafana at `https://grafana.example.com` and import:
@@ -164,6 +170,37 @@ Access Grafana at `https://grafana.example.com` and import:
 ### Prometheus Targets
 
 Check scrape status at `https://prometheus.example.com/targets`
+
+---
+## Health Monitoring
+
+### Uptime Kuma Dashboard
+
+Access the monitoring dashboard at `https://status.example.com`
+
+**Monitored services:**
+- Grafana (HTTPS endpoint)
+- Prometheus (health endpoint)
+- Vaultwarden (alive endpoint)
+- Node Exporter (metrics endpoint)
+- Nginx (HTTP → HTTPS redirect)
+
+**Features:**
+- Real-time status updates via WebSocket
+- Historical uptime statistics
+- Email notifications on downtime
+- Public status page (optional)
+
+### Configure Notifications
+
+1. Login to Uptime Kuma
+2. Settings → Notifications
+3. Add SMTP, Slack, Discord, or other integrations
+4. Apply to individual monitors
+
+### Public Status Page
+
+Share service status with others: `https://status.example.com/status/your-slug`
 
 ---
 ## Backup Strategy
