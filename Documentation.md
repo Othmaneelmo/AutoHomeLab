@@ -7,7 +7,6 @@ This repository documents the step‑by‑step design and implementation of a **
 * Build infrastructure **from first principles**
 * Understand *why* each component exists
 * Keep the system explainable, auditable, and extensible
-* Maintain credibility for interviews and long‑term maintenance
 
 All decisions favor **clarity, observability, and separation of concerns** over shortcuts.
 
@@ -19,7 +18,7 @@ The homelab is designed around the following ideas:
 
 * **Containers** are used for application services
 * **Podman + podman‑compose** are used instead of Docker (daemonless, rootless‑friendly)
-* **Monitoring is foundational**, not an afterthought
+* **Monitoring is foundational**
 * **Ingress is centralized** through a reverse proxy
 * Configuration is **explicit**, not auto‑generated
 
@@ -62,7 +61,6 @@ homelab/
 │   └── bootstrap/
 │       └── README.md
 │
-├── README.md
 └── documentation.md
 ```
 
@@ -98,10 +96,6 @@ Using `podman-compose` preserves familiarity while improving security posture.
 
 **Purpose:** Visualization and dashboarding
 
-**Why first?**
-
-* Forces early thinking about observability
-* Makes later debugging easier
 
 **Key decisions:**
 
@@ -151,7 +145,7 @@ Node Exporter exposes metrics on port `9100`.
 
 * Static scrape configuration (no hidden discovery)
 * Explicit targets for transparency
-* Persistent TSDB storage on host
+* Persistent TSDB (Time-Series Database) storage on host
 
 Prometheus is the *only* component that scrapes metrics.
 
