@@ -370,7 +370,124 @@ homelab/
 
 ---
 
-At this stage, I have a **fully working, containerized monitoring stack with reverse proxy**
+At this stage, I have a **fully working, containerized monitoring stack with reverse proxy**, the next step now is to Automate Let’s Encrypt Renewal (Containerized)
+
+---
+
+**Goal:** Let Certbot automatically renew certificates inside the container. Nginx reloads only if renewal succeeds. No host cron jobs. Fully containerized, safe, idempotent.
+
+---
+
+## STEP 1 — Add a Renewal Service
+
+Edit the existing `docker-compose.yml` in:
+
+```bash
+cd homelab/containers/reverse-proxy/nginx
+nano docker-compose.yml
+```
+
+Add the following service at the bottom:
+
+```yaml
+  certbot-renew:
+    image: certbot/certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: >
+      /bin/sh -c "
+      trap exit TERM;
+      while :; do
+        certbot renew --webroot -w /var/www/certbot;
+        sleep 12h;
+      done"
+```
+
+**Why this works:**
+
+* Runs inside a container → keeps host clean
+* Sleeps 12 hours between checks → avoids abuse limits
+* Idempotent → only renews if necessary
+* No host cron required
+
+---
+
+## STEP 2 — Prepare Nginx to Reload Certificates Safely
+
+Certificates renew on disk, but Nginx must **reload to pick up new certs**.
+
+1. Open `nginx.conf`:
+
+```bash
+nano nginx.conf
+```
+
+
+
+2. Inside each HTTPS server block (443), add:
+
+```nginx
+ssl_session_cache shared:certs:1m;
+```
+
+**Why:** Ensures that when certificates reload, session caching remains safe and avoids errors during reload.
+
+---
+
+## STEP 3 — Document Manual Nginx Reload
+
+Before automating reloads, test manually:
+
+```bash
+podman exec nginx_nginx_1 nginx -s reload
+```
+
+
+
+---
+
+## STEP 4 — Restart the Stack
+
+```bash
+podman-compose down
+podman-compose up -d
+```
+
+This ensures all services (Nginx, Certbot, Grafana, Prometheus) are running with updated configuration.
+
+---
+
+## STEP 5 — Verify Renewal Works (Dry Run)
+
+Run:
+
+```bash
+podman-compose run --rm certbot renew --dry-run
+```
+
+Expected output:
+
+* Renewal simulation succeeds
+* No errors reported
+
+**If it fails:** stop and troubleshoot before moving on.
+
+---
+
+## STEP 6 — Git Hygiene
+
+* **Never commit certificates or keys**
+* Commit only configuration and documentation (`nginx.conf`, `docker-compose.yml`)
+* TLS files and certbot directories remain in `.gitignore`
+
+`.gitignore` example:
+
+```text
+# TLS secrets
+containers/reverse-proxy/nginx/tls/
+containers/reverse-proxy/nginx/certbot/
+```
 
 
 ### Why use Podman
