@@ -1,0 +1,11 @@
+services:
+  vaultwarden:
+    image: vaultwarden/server:latest
+    restart: unless-stopped
+
+    environment:
+      DOMAIN: https://vault.example.com
+      SIGNUPS_ALLOWED: "false"
+
+    volumes:
+      - ./data:/data
