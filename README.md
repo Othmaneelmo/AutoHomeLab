@@ -180,7 +180,57 @@ Check scrape status at `https://prometheus.example.com/targets`
 
 ---
 ## Health Monitoring
+## Media Streaming
 
+### Jellyfin Server
+
+Access your media library at `https://media.example.com`
+
+**Features:**
+- Stream movies, TV shows, and music to any device
+- Automatic metadata and artwork fetching
+- User profiles with watch history and favorites
+- Parental controls and content ratings
+- Mobile apps (iOS, Android) and TV apps (Android TV, Fire TV, Roku, etc.)
+- Hardware transcoding for efficient streaming
+
+**Supported clients:**
+- Web browser (any device)
+- Jellyfin mobile apps
+- Jellyfin Media Player (desktop)
+- Third-party apps (Infuse, Kodi with Jellyfin plugin)
+
+### Adding Media
+
+1. **Copy media files to:**
+   - Movies: `/mnt/media/movies/`
+   - TV Shows: `/mnt/media/tv/`
+   - Music: `/mnt/media/music/`
+
+2. **Organize by naming conventions:**
+   - Movies: `/mnt/media/movies/Movie Title (Year)/movie.mkv`
+   - TV Shows: `/mnt/media/tv/Show Name/Season 01/S01E01.mkv`
+
+3. **Jellyfin will automatically scan and fetch metadata**
+
+### Hardware Transcoding
+
+If you have compatible hardware:
+
+**Intel QuickSync:**
+- Uncomment `devices: - /dev/dri:/dev/dri` in docker-compose.yml
+- Add user to `render` group: `sudo usermod -aG render $USER`
+- Enable in Jellyfin: Dashboard → Playback → Hardware acceleration
+
+**NVIDIA GPU:**
+- Install nvidia-container-toolkit
+- Uncomment NVIDIA runtime section in docker-compose.yml
+- Enable in Jellyfin: Dashboard → Playback → NVENC acceleration
+
+**Benefits:**
+- Lower CPU usage during streaming
+- Support for more simultaneous streams
+- Faster transcoding for large files
 ### Uptime Kuma Dashboard
 
 Access the monitoring dashboard at `https://status.example.com`
