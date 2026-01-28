@@ -16,15 +16,22 @@ This homelab uses **Podman** (rootless, daemonless) for container orchestration 
 ## Current Services
 
 ### Applications
-**Vaultwarden** (`vault.example.com`) — Self-hosted password manager
-- Bitwarden-compatible API
-- WebAuthn/U2F support
-- Admin panel for user management
+- **Jellyfin** (`media.example.com`) — Self-hosted media streaming server
+  - Movies, TV shows, and music libraries
+  - Hardware transcoding support
+  - Mobile and TV client apps
+  - User management and parental controls
+- **Vaultwarden** (`vault.example.com`) — Self-hosted password manager
+  - Bitwarden-compatible API
+  - WebAuthn/U2F support
+  - Admin panel for user management
+
 ### Monitoring
 - **Uptime Kuma** (`status.example.com`) — Service health monitoring and status page
 - **Grafana** (`grafana.example.com`) — Metrics visualization and dashboards
 - **Prometheus** (`prometheus.example.com`) — Time-series metrics database
 - **Node Exporter** — Host system metrics collector
+
 ### Infrastructure
 - **Nginx** — Reverse proxy with automatic SSL/TLS via Let's Encrypt
 - **Certbot** — Automated certificate issuance and renewal
