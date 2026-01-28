@@ -93,8 +93,8 @@ homelab/
 
 2. **Prepare persistent storage:**
 ```bash
-   sudo mkdir -p /srv/{grafana,prometheus,vaultwarden}/data
-   sudo chown -R $USER:$USER /srv
+  sudo mkdir -p /srv/{grafana,prometheus,vaultwarden,jellyfin/{config,cache},uptime-kuma}/data
+  sudo chown -R $USER:$USER /srv
 ```
 
 3. **Configure each service:**
