@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
 
     ports:
-      - "${VAULTWARDEN_PORT}:80"
+      - "${VAULTWARDEN_PORT:-8080}:80"
 
     environment:
       DOMAIN: "${DOMAIN}"
