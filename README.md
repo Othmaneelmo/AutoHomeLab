@@ -43,13 +43,14 @@ This homelab uses **Podman** (rootless, daemonless) for container orchestration 
 homelab/
 ├── containers/
 │   ├── apps/
+│   │   ├── jellyfin/              # Media streaming server
+│   │   │   ├── docker-compose.yml
+│   │   │   └── .env.example
 │   │   └── vaultwarden/          # Password manager
 │   │       ├── docker-compose.yml
 │   │       └── .env.example
 │   ├── monitoring/
 │   │   ├── uptime-kuma/          # Service health monitoring
-│   │   │   ├── docker-compose.yml
-│   │   │   └── .env.example
 │   │   ├── grafana/              # Visualization
 │   │   ├── prometheus/           # Metrics database
 │   │   └── node-exporter/        # System metrics
@@ -69,6 +70,7 @@ homelab/
 │   └── homelab-setup-guide.md    # Step-by-step instructions
 ├── .gitignore
 └── README.md
+
 ```
 
 ---
