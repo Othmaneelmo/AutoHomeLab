@@ -7,6 +7,10 @@ nano .gitignore
 # Environment files with secrets
 **/.env
 
+#certificates and keys
+**/*.crt
+**/*.key
+
 # TLS secrets
 containers/reverse-proxy/nginx/tls/*
 containers/reverse-proxy/nginx/certbot/
