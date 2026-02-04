@@ -1,399 +1,146 @@
-# Homelab Infrastructure
+# Homelab Infrastructure — Personal Project
 
-A production-grade, containerized home lab for self-hosted services with monitoring, security, and automation.
+This homelab started as something I built for myself: I wanted reliable access to my services, better visibility into my systems, and a setup I could confidently maintain and extend. Over time, it turned into a **production-style environment** that I now use to practice real-world infrastructure patterns (containerization, monitoring, security, and automation).
 
-## Architecture
-
-This homelab uses **Podman** (rootless, daemonless) for container orchestration with a focus on:
-
-- **Security**: No hardcoded secrets, HTTPS-only access, minimal attack surface
-- **Maintainability**: Environment-based configuration, explicit file structure
-- **Observability**: Full-stack monitoring with Prometheus and Grafana
-- **Scalability**: Modular design for easy service addition
+The entire stack is automated so I can tear it down and redeploy it quickly, which lets me experiment safely and iterate without fear of breaking things permanently.
 
 ---
 
-## Current Services
+## What This Project Demonstrates
+
+* Designing and operating a **containerized Linux environment**
+* Making deliberate **security tradeoffs** (rootless containers, HTTPS-only, secrets management)
+* Setting up **monitoring and observability** the way it’s done in production
+* Writing **maintainable infrastructure**, not one-off scripts
+* Treating a “homelab” like a real system people depend on
+
+---
+
+## High-Level Architecture
+
+The lab runs on a Linux host using **Podman (rootless)** instead of Docker. I chose Podman to better understand daemonless container models and reduce the system’s attack surface.
+
+Key design goals:
+
+* **Security first**: no hardcoded secrets, minimal privileges, TLS everywhere
+* **Maintainability**: environment-based configuration, clear directory layout
+* **Observability**: metrics, dashboards, and uptime checks from day one
+* **Extensibility**: adding a new service should be boring and predictable
+
+---
+
+## Services I Run
 
 ### Applications
-- **Jellyfin** (`media.example.com`) — Self-hosted media streaming server
-  - Movies, TV shows, and music libraries
-  - Hardware transcoding support
-  - Mobile and TV client apps
-  - User management and parental controls
-- **Vaultwarden** (`vault.example.com`) — Self-hosted password manager
-  - Bitwarden-compatible API
-  - WebAuthn/U2F support
-  - Admin panel for user management
 
-### Monitoring
-- **Uptime Kuma** (`status.example.com`) — Service health monitoring and status page
-- **Grafana** (`grafana.example.com`) — Metrics visualization and dashboards
-- **Prometheus** (`prometheus.example.com`) — Time-series metrics database
-- **Node Exporter** — Host system metrics collector
+**Jellyfin** : self-hosted media server
 
-### Infrastructure
-- **Nginx** — Reverse proxy with automatic SSL/TLS via Let's Encrypt
-- **Certbot** — Automated certificate issuance and renewal
+* Hardware-accelerated transcoding
+* Multiple user profiles and parental controls
+* Accessible from mobile, TV, and web clients
+
+**Vaultwarden** : password manager (Bitwarden-compatible)
+
+* WebAuthn / U2F support
+* Admin controls and restricted signups
+* Fully self-hosted, no third-party dependency
 
 ---
 
-## Directory Structure
+### Monitoring & Visibility
+
+**Prometheus**
+
+* Collects host and service-level metrics
+
+**Grafana**
+
+* Dashboards for system health, resource usage, and service behavior
+
+**Node Exporter**
+
+* Low-level host metrics (CPU, memory, disk, network)
+
+**Uptime Kuma**
+
+* External-style monitoring with alerting
+* Optional public status page
+
+I built monitoring early because I wanted to **know when something breaks instead of guessing why it feels slow**.
+
+---
+
+### Infrastructure Components
+
+**Nginx reverse proxy**
+
+* Central entry point for all services
+* Automatic HTTPS via Let’s Encrypt
+
+**Certbot**
+
+* Handles certificate issuance and renewal
+* No certificates or private keys committed to Git
+
+All services are only exposed through the reverse proxy, nothing listens directly on the host.
+
+---
+
+## Repository Layout (Intentional, Not Accidental)
+
 ```
 homelab/
-├── containers/
+├── containers/        # All containerized services
 │   ├── apps/
-│   │   ├── jellyfin/              # Media streaming server
-│   │   │   ├── docker-compose.yml
-│   │   │   └── .env.example
-│   │   └── vaultwarden/          # Password manager
-│   │       ├── docker-compose.yml
-│   │       └── .env.example
 │   ├── monitoring/
-│   │   ├── uptime-kuma/          # Service health monitoring
-│   │   ├── grafana/              # Visualization
-│   │   ├── prometheus/           # Metrics database
-│   │   └── node-exporter/        # System metrics
 │   └── reverse-proxy/
-│       └── nginx/                # HTTPS termination
-│           ├── docker-compose.yml
-│           ├── nginx.conf
-│           └── .env.example
-├── scripts/
-│   └── backup/                   # Automated backups
-│       ├── backup-homelab.sh
-│       ├── check-backup-status.sh
-│       └── RESTORE.md
-├── env/
-│   └── example.env               # Global configuration template
-├── setup-guide/
-│   └── homelab-setup-guide.md    # Step-by-step instructions
-├── .gitignore
+├── scripts/           # Automation and backups
+├── env/               # Global config templates
+├── setup-guide/       # Step-by-step deployment docs
 └── README.md
-
 ```
+
+Each service is isolated, documented, and configurable through environment files. I structured this the same way I’d expect to see in a small production repo, not a pile of YAML files.
 
 ---
 
-## Quick Start
+## Deployment & Automation
 
-### Prerequisites
-- Linux host (Ubuntu 22.04+ or similar)
-- Podman and podman-compose installed
-- Domain names pointed to your server
-- Ports 80 and 443 open on your firewall
+* One-time host preparation (directories, permissions)
+* Environment variables control all secrets and config
+* Services started in dependency order
+* SSL certificates obtained and renewed automatically
+* Backups run daily via systemd timers
 
-### Initial Setup
-
-1. **Clone the repository:**
-```bash
-   git clone <your-repo-url>
-   cd homelab
-```
-
-2. **Prepare persistent storage:**
-```bash
-  sudo mkdir -p /srv/{grafana,prometheus,vaultwarden,jellyfin/{config,cache},uptime-kuma}/data
-  sudo chown -R $USER:$USER /srv
-```
-
-3. **Configure each service:**
-```bash
-   # Copy example environment files
-   cp containers/monitoring/grafana/.env.example containers/monitoring/grafana/.env
-   cp containers/apps/vaultwarden/.env.example containers/apps/vaultwarden/.env
-   
-   # Edit with your actual values
-   nano containers/monitoring/grafana/.env
-   nano containers/apps/vaultwarden/.env
-```
-
-4. **Start services:**
-```bash
-   # Monitoring stack
-   cd containers/monitoring/node-exporter && podman-compose up -d
-   cd ../prometheus && podman-compose up -d
-   cd ../grafana && podman-compose up -d
-   
-   # Applications
-   cd ../../apps/vaultwarden && podman-compose up -d
-   
-   # Reverse proxy (start last)
-   cd ../../reverse-proxy/nginx && podman-compose up -d
-```
-
-5. **Obtain SSL certificates:**
-```bash
-   cd containers/reverse-proxy/nginx
-   podman-compose run --rm certbot certonly --webroot \
-     -w /var/www/certbot \
-     -d grafana.example.com \
-     -d prometheus.example.com \
-     -d vault.example.com \
-     --email your-email@example.com \
-     --agree-tos
-```
-
-6. **Reload Nginx:**
-```bash
-   podman exec nginx nginx -s reload
-```
+I can fully redeploy the lab on a fresh machine with minimal manual work.
 
 ---
 
-## Configuration
-
-
-
-**Global variables** are documented in `env/example.env` for reference.
-
-### SSL/TLS Certificates
-
-- Certificates are automatically managed by Certbot
-- Renewal runs every 12 hours via `certbot-renew` container
-- Certificates stored in `containers/reverse-proxy/nginx/certbot/conf`
-- **Never commit certificates to Git**
-
----
-
-## Security
-
-- **No hardcoded secrets**: All sensitive data in `.env` files
-- **HTTPS-only**: All services behind SSL/TLS termination
-- **Rootless containers**: Podman runs without root privileges
-- **Admin authentication**: Admin panels protected by tokens
-- **Signup restrictions**: Public registration disabled by default
-
----
-
-## Monitoring
-
-
-### Grafana Dashboards
-
-Access Grafana at `https://grafana.example.com` and import:
-
-- **Node Exporter Full** (Dashboard ID: 1860) — System metrics
-- **Prometheus 2.0 Overview** (Dashboard ID: 3662) — Prometheus health
-
-### Prometheus Targets
-
-Check scrape status at `https://prometheus.example.com/targets`
-
----
-## Health Monitoring
-## Media Streaming
-
-### Jellyfin Server
-
-Access your media library at `https://media.example.com`
-
-**Features:**
-- Stream movies, TV shows, and music to any device
-- Automatic metadata and artwork fetching
-- User profiles with watch history and favorites
-- Parental controls and content ratings
-- Mobile apps (iOS, Android) and TV apps (Android TV, Fire TV, Roku, etc.)
-- Hardware transcoding for efficient streaming
-
-**Supported clients:**
-- Web browser (any device)
-- Jellyfin mobile apps
-- Jellyfin Media Player (desktop)
-- Third-party apps (Infuse, Kodi with Jellyfin plugin)
-
-### Adding Media
-
-1. **Copy media files to:**
-   - Movies: `/mnt/media/movies/`
-   - TV Shows: `/mnt/media/tv/`
-   - Music: `/mnt/media/music/`
-
-2. **Organize by naming conventions:**
-   - Movies: `/mnt/media/movies/Movie Title (Year)/movie.mkv`
-   - TV Shows: `/mnt/media/tv/Show Name/Season 01/S01E01.mkv`
-
-3. **Jellyfin will automatically scan and fetch metadata**
-
-### Hardware Transcoding
-
-If you have compatible hardware:
-
-**Intel QuickSync:**
-- Uncomment `devices: - /dev/dri:/dev/dri` in docker-compose.yml
-- Add user to `render` group: `sudo usermod -aG render $USER`
-- Enable in Jellyfin: Dashboard → Playback → Hardware acceleration
-
-**NVIDIA GPU:**
-- Install nvidia-container-toolkit
-- Uncomment NVIDIA runtime section in docker-compose.yml
-- Enable in Jellyfin: Dashboard → Playback → NVENC acceleration
-
-**Benefits:**
-- Lower CPU usage during streaming
-- Support for more simultaneous streams
-- Faster transcoding for large files
-### Uptime Kuma Dashboard
-
-Access the monitoring dashboard at `https://status.example.com`
-
-**Monitored services:**
-- Grafana (HTTPS endpoint)
-- Prometheus (health endpoint)
-- Vaultwarden (alive endpoint)
-- Node Exporter (metrics endpoint)
-- Nginx (HTTP → HTTPS redirect)
-
-**Features:**
-- Real-time status updates via WebSocket
-- Historical uptime statistics
-- Email notifications on downtime
-- Public status page (optional)
-
-### Configure Notifications
-
-1. Login to Uptime Kuma
-2. Settings → Notifications
-3. Add SMTP, Slack, Discord, or other integrations
-4. Apply to individual monitors
-
-### Public Status Page
-
-Share service status with others: `https://status.example.com/status/your-slug`
-
----
 ## Backup Strategy
 
-### Automated Backups
+I didn’t treat backups as optional.
 
-**What's backed up:**
-- `/srv/grafana/data` — Grafana dashboards and configuration
-- `/srv/prometheus/data` — Metrics time-series database
-- `/srv/vaultwarden/data` — Password vault database
+* Daily automated backups
+* Rotation with retention limits
+* Integrity checks after each run
+* Documented restore procedures (including partial restores)
 
-**Schedule:**
-- Runs daily at 2:00 AM via systemd timer
-- Retention: 7 days (automatic rotation)
-- Location: `/backups/homelab/`
-
-**Verification:**
-- Integrity check after each backup
-- Manual testing recommended monthly
-
-### Check Backup Status
-```bash
-# View backup status
-~/homelab/scripts/backup/check-backup-status.sh
-
-# View backup logs
-sudo journalctl -u homelab-backup.service
-
-# List all backups
-ls -lh /backups/homelab/
-```
-
-### Manual Backup
-```bash
-# Run backup immediately
-sudo systemctl start homelab-backup.service
-
-# Monitor progress
-sudo journalctl -u homelab-backup.service -f
-```
-
-### Restore Procedures
-
-See [RESTORE.md](scripts/backup/RESTORE.md) for detailed restore procedures including:
-- Full system restore
-- Selective service restore
-- Disaster recovery guide
-## Maintenance
-
-### Update containers
-```bash
-cd containers/<service-name>
-podman-compose pull
-podman-compose up -d
-```
-
-### View logs
-```bash
-podman logs -f <container-name>
-```
-
-### Restart services
-```bash
-podman-compose restart
-```
+This was mainly to force myself to think through **“what would I actually do if this machine died?”**
 
 ---
 
-## Troubleshooting
+## Security Choices (and Why)
 
-### Service won't start
-```bash
-# Check container status
-podman ps -a
-
-# View logs
-podman logs <container-name>
-
-# Check environment variables
-cat .env
-```
-
-### Certificate issues
-```bash
-# Test renewal
-podman-compose run --rm certbot renew --dry-run
-
-# Force renewal
-podman-compose run --rm certbot renew --force-renewal
-
-# Reload Nginx
-podman exec nginx nginx -s reload
-```
-
-### Permission errors
-```bash
-# Fix /srv ownership
-sudo chown -R $USER:$USER /srv
-
-# Check SELinux (if enabled)
-sudo ausearch -m avc -ts recent
-```
+* **Rootless containers** to reduce blast radius
+* **No plaintext secrets in Git**
+* **HTTPS-only access** for all services
+* **Restricted admin panels and signups**
 
 ---
 
-## Contributing
+## Why I Built This
 
-This is a personal homelab, but contributions are welcome:
+I learn best by running real systems and living with the consequences. This homelab is where I experiment, break things, fix them, and gradually raise the bar on how “production-like” my setups are.
 
-1. Fork the repository
-2. Create a feature branch
-3. Update documentation
-4. Test changes thoroughly
-5. Submit a pull request
+It’s also become a concrete way to demonstrate skills that are hard to show on a résumé alone: infrastructure design, operational thinking, and long-term maintainability.
 
-
-
----
-
-## Resources
-
-- [Detailed Setup Guide](setup-guide/homelab-setup-guide.md)
-- [Podman Documentation](https://docs.podman.io/)
-- [Let's Encrypt Documentation](https://letsencrypt.org/docs/)
-- [Vaultwarden Wiki](https://github.com/dani-garcia/vaultwarden/wiki)
-
----
-
-## License
-
-MIT License — See LICENSE file for details
-
----
-
-## Acknowledgments
-
-Built with guidance from the homelab and self-hosting communities.
